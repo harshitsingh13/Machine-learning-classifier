@@ -1,0 +1,105 @@
+import nltk
+nltk.download('punkt')
+from sklearn.linear_model import LogisticRegression as lm
+import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix, accuracy_score
+import csv
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import precision_score
+from sklearn.metrics import recall_score
+from sklearn.metrics import f1_score
+import pandas as pd
+import numpy as np
+from sklearn import svm
+from textblob import TextBlob
+from sklearn.feature_extraction.text import CountVectorizer
+#import matplotlib.pyplot as plt1 
+from sklearn.model_selection import train_test_split
+from nltk.tokenize import word_tokenize
+from collections import defaultdict 
+ 
+reddit_df = pd.read_pickle("/content/drive/My Drive/redditDataset.pkl")
+data=reddit_df
+data=data.drop_duplicates(subset=None, keep='first', inplace=False)
+data=data.to_numpy()
+newdata=data
+single=[]
+l=[]
+for i in newdata:
+  l.append(i[0])
+  single.extend(i[0].split())
+  #print(i[0])
+  if(i[1]=="news"):
+    i[1]=1
+  else:
+    i[1]=0
+#print(l)
+sentences = []
+idx_word = {}
+allwords = []
+vector=[]
+
+for i in l:
+    newsent = word_tokenize(i)
+    #print(newsent)
+    for w in newsent:
+      #print(i)
+      if w.isalpha():
+        w.lower()
+    sentences.append(newsent)
+    for j in newsent:
+        allwords.append(j)
+#print(allwords)
+comments=[]
+for i in data:
+  comments.append(i[0])
+#number of words in the vocabulary
+length = len(allwords)
+idx=len(sentences)
+j = 0
+for i in allwords:
+    idx_word[i] = j 
+    j += 1
+res=[]
+for i in newdata:
+  res.append(i[1])
+for i in range(0,idx):
+  #print(i)
+  count = defaultdict(int)
+  vec = np.zeros(length)
+  #vec=vec.tolist()
+  for j in sentences[i]:
+    count[j] += 1
+  for k,m in count.items():
+    vec[idx_word[k]] = m
+  vector.append(vec) 
+
+#print(len(sentences))
+#print(len(res))
+#print(len(vector))
+regenerate=list(zip(vector,res))
+#print(regenerate)
+X_train, X_test, y_train, y_test = train_test_split(l, res, test_size=0.30, random_state=0)
+#train=list(zip(X_train,y_train))
+#test=list(zip(X_test,y_test))
+###################################
+print("Here I use logistic regression model for finding results")
+#################################################
+vectorizer = CountVectorizer()
+X_train = vectorizer.fit_transform(X_train)
+X_test = vectorizer.transform(X_test)
+#################################################
+#print(len(train))
+#print(len(test))
+lm1=lm(random_state=0)
+lm1.fit(X_train,y_train)
+predictions=lm1.predict(X_test)
+print("Accuracy score is:",accuracy_score(y_test, predictions))
+print("f1 score is:",f1_score(y_test,predictions))
+print("Precision score is:",precision_score(y_test,predictions))
+print("Recall score is:",recall_score(y_test,predictions))
+print("Confusion matrix is:")
+print(confusion_matrix(y_test,predictions))
+#print(len(predictions),len(y_test),len(y_train))
+#print(len(res))
